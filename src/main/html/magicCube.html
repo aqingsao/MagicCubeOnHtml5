@@ -1,0 +1,165 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title></title>
+<script type="text/javascript" src="../js/canvaschart-0.0.1.js">
+</script>
+<script type="text/javascript" src="../js/magicCube.js">
+</script>
+<script type="text/javascript">
+function drawSideBackground(central, singleSide, cxt, color) {
+    var bgLength = 3 * singleSide + 1.5 * singleSide;
+
+    var leftBG = central.buildPolygon(bgLength, Math.PI / 2, Math.PI + Math.PI / 6);
+    var downBG = central.buildPolygon(bgLength, -Math.PI / 6, Math.PI / 2);
+    var rightBG = central.buildPolygon(bgLength, Math.PI + Math.PI / 6, -Math.PI / 6);
+
+    cxt.fillStyle = color;
+    leftBG.draw(cxt);
+    downBG.draw(cxt);
+    rightBG.draw(cxt);
+}
+
+function show() {
+    var c = document.getElementById("mg");
+    c.height = 500;
+    c.width = 500;
+    c.style.border = "1px solid";
+
+    var bgColor = "#000000";
+    var sideColor = "#eeeeee";
+    var cxt = c.getContext("2d");
+    cxt.fillStyle = bgColor;
+    cxt.fillRect(0, 0, c.width, c.height);
+
+    var singleSide = 40;
+    var central = new CPoint(c.width / 2, c.height / 2);
+
+    drawSideBackground(central, singleSide, cxt, sideColor);
+
+    magicCube = new MagicCube();
+    magicCube.drawSides(cxt, central, singleSide);
+}
+
+function redrawSides() {
+    var c = document.getElementById("mg");
+    var cxt = c.getContext("2d");
+    var singleSide = 40;
+    var central = new CPoint(c.width / 2, c.height / 2);
+
+    magicCube.drawSides(cxt, central, singleSide);
+}
+
+function reset() {
+    magicCube = new MagicCube();
+    redrawSides();
+}
+function clickEvent() {
+    c.cursor.style = "pointer";
+    alert("You clicked me");
+}
+function showCursor(event) {
+    c = document.getElementById("mg");
+    cxt = c.getContext("2d");
+    var singleSide = 40;
+    var central = new CPoint(c.width / 2, c.height / 2);
+    var clickable = false;
+    for (var i = 0; i < magicCube.cubes.length; i++) {
+        for (var j = 0; j < magicCube.cubes[i].visibleSides.length; j++) {
+            var side = magicCube.cubes[i].visibleSides[j];
+            side.draw(cxt, central, singleSide, magicCube.cubes[i]);
+            var x = event.clientX - c.offsetLeft;
+            var y = event.clientY - c.offsetTop;
+            if (clickable == false) {
+                clickable = cxt.isPointInPath(x, y);
+            }
+        }
+    }
+    if (clickable) {
+        c.style.cursor = "pointer";
+    }
+    else {
+        c.style.cursor = "default";
+    }
+}
+function moveStep(event) {
+    c = document.getElementById("mg");
+    cxt = c.getContext("2d");
+    var central = new CPoint(c.width / 2, c.height / 2);
+    var singleSide = 40;
+    for (var i = 0; i < magicCube.cubes.length; i++) {
+        for (var j = 0; j < magicCube.cubes[i].visibleSides.length; j++) {
+            var side = magicCube.cubes[i].visibleSides[j];
+            side.draw(cxt, central, singleSide, magicCube.cubes[i]);
+            var x = event.clientX - c.offsetLeft;
+            var y = event.clientY - c.offsetTop;
+            if (cxt.isPointInPath(x, y)) {
+                doRotate(side, magicCube.cubes[i]);
+            }
+        }
+    }
+}
+function doRotate(side, cube) {
+    if (side instanceof XSide) {
+        if (cube.y == 1) {
+            magicCube.rotateZ(cube.z, 'anti');
+        }
+        else if (cube.y == -1) {
+            magicCube.rotateZ(cube.z);
+        }
+        else{
+            if(cube.z == 1){
+                magicCube.rotateY(0);
+            }
+            else if(cube.z == -1){
+                magicCube.rotateY(0, 'anti');
+            }
+        }
+    }
+    else if (side instanceof YSide) {
+        if (cube.z == 1) {
+            magicCube.rotateX(cube.x, 'anti');
+        }
+        else if (cube.z == -1) {
+            magicCube.rotateX(cube.x);
+        }
+        else{
+            if(cube.x == 1){
+                magicCube.rotateZ(0);
+            }
+            else if(cube.x == -1){
+                magicCube.rotateZ(0, 'anti');
+            }
+        }
+    }
+    else if (side instanceof ZSide) {
+        if (cube.x == 1) {
+            magicCube.rotateY(cube.y, 'anti');
+        }
+        else if (cube.x == -1) {
+            magicCube.rotateY(cube.y);
+        }
+        else{
+            if(cube.y == 1){
+                magicCube.rotateX(0);
+            }
+            else if(cube.y == -1){
+                magicCube.rotateX(0, 'anti');
+            }
+        }
+    }
+    redrawSides();
+}
+</script>
+</head>
+<body onload="show();">
+<div>
+    <label>Reset</label>
+    <input type="button" value="reset" onclick="reset();"/>
+</div>
+<canvas id="mg" style="height:500px; width:500px" onMouseMove="showCursor(event)" onClick="moveStep(event)">
+    You browser does not support canvas.
+</canvas>
+</body>
+</html>
