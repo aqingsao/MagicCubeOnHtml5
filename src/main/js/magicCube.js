@@ -276,8 +276,8 @@ MagicCube.prototype.rotateY = function(value, direction) {
             this.cubes[i].rotateY();
         }
     }
-    this.rotate(this.getCube(-1, value, 1), this.getCube(-1, value, -1), this.getCube(1, value, -1), this.getCube(1, value, 1), direction);
-    this.rotate(this.getCube(0, value, 1), this.getCube(-1, value, 0), this.getCube(0, value, -1), this.getCube(1, value, 0), direction);
+    this.rotate(this.getCube(-1, value, 1), this.getCube(1, value, 1), this.getCube(1, value, -1), this.getCube(-1, value, -1), direction);
+    this.rotate(this.getCube(0, value, 1), this.getCube(1, value, 0), this.getCube(0, value, -1), this.getCube(-1, value, 0), direction);
 }
 MagicCube.prototype.rotateX = function(value, direction) {
     for (var i = 0; i < this.cubes.length; i++) {

@@ -208,7 +208,8 @@ function startNewTask() {
 
 function taskStart() {
     startClock();
-    document.getElementById("grade").innerHTML = "Time spent: " + 0 + " seconds";
+    document.getElementById("msg").innerHTML = "Timer started...";
+    document.getElementById("grade").innerHTML = "";
 }
 function taskFinished() {
     stopClock();
