@@ -200,12 +200,6 @@ MagicCube.prototype.rotate = function(cube1, cube2, cube3, cube4, direction) {
     }
 
 }
-MagicCube.prototype.antiRotate = function(cube1, cube2, cube3, cube4) {
-    var tmpX = cube1.xColor;
-    var tmpY = cube1.yColor;
-    var tmpZ = cube1.zColor;
-
-}
 MagicCube.prototype.rotateY = function(value, direction) {
     for (var i = 0; i < this.cubes.length; i++) {
         if (this.cubes[i].y == value) {
@@ -232,4 +226,65 @@ MagicCube.prototype.rotateZ = function(value, direction) {
     }
     this.rotate(this.getCube(1, 1, value), this.getCube(-1, 1, value), this.getCube(-1, -1, value), this.getCube(1, -1, value), direction);
     this.rotate(this.getCube(0, 1, value), this.getCube(-1, 0, value), this.getCube(0, -1, value), this.getCube(1, 0, value), direction);
+}
+
+MagicCube.prototype.allRestored = function(){
+    if(!this.theSameColor(this.getXSideColors(1))){
+        return false;
+    }
+    if(!this.theSameColor(this.getXSideColors(-1))){
+        return false;
+    }
+    if(!this.theSameColor(this.getYSideColors(1))){
+        return false;
+    }
+    if(!this.theSameColor(this.getYSideColors(-1))){
+        return false;
+    }
+    if(!this.theSameColor(this.getZSideColors(1))){
+        return false;
+    }
+    if(!this.theSameColor(this.getZSideColors(-1))){
+        return false;
+    }
+    return true;
+
+}
+
+MagicCube.prototype.getXSideColors = function(value){
+    var sides = [];
+    for (var i = 0; i < this.cubes.length; i++) {
+       if(this.cubes[i].x == value){
+           sides[sides.length] = this.cubes[i].xColor;
+       }
+    }
+    return sides;
+}
+MagicCube.prototype.getYSideColors = function(value){
+    var sides = [];
+    for (var i = 0; i < this.cubes.length; i++) {
+       if(this.cubes[i].y == value){
+           sides[sides.length] = this.cubes[i].yColor;
+       }
+    }
+    return sides;
+}
+MagicCube.prototype.getZSideColors = function(value){
+    var sides = [];
+    for (var i = 0; i < this.cubes.length; i++) {
+       if(this.cubes[i].z == value){
+           sides[sides.length] = this.cubes[i].zColor;
+       }
+    }
+    return sides;
+}
+
+MagicCube.prototype.theSameColor = function(colors){
+    var c = colors[0];
+    for(var i = 0; i < colors.length; i++){
+        if(colors[i] != c){
+            return false;
+        }
+    }
+    return true;
 }

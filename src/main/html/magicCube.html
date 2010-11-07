@@ -8,6 +8,10 @@
 <script type="text/javascript" src="../js/magicCube.js">
 </script>
 <script type="text/javascript">
+var startTime = null;
+var endTime = null;
+var ready = false;
+var running = false;
 function drawSideBackground(central, singleSide, cxt, color) {
     var bgLength = 3 * singleSide + 1.5 * singleSide;
 
@@ -54,10 +58,10 @@ function redrawSides() {
 function reset() {
     magicCube = new MagicCube();
     redrawSides();
+    taskCanceled();
 }
 function clickEvent() {
     c.cursor.style = "pointer";
-    alert("You clicked me");
 }
 function showCursor(event) {
     c = document.getElementById("mg");
@@ -101,6 +105,12 @@ function moveStep(event) {
     }
 }
 function doRotate(side, cube) {
+    if (ready == true) {
+        if (running == false) {
+            taskStart();
+        }
+    }
+
     if (side instanceof XSide) {
         if (cube.y == 1) {
             magicCube.rotateZ(cube.z, 'anti');
@@ -108,11 +118,11 @@ function doRotate(side, cube) {
         else if (cube.y == -1) {
             magicCube.rotateZ(cube.z);
         }
-        else{
-            if(cube.z == 1){
+        else {
+            if (cube.z == 1) {
                 magicCube.rotateY(0);
             }
-            else if(cube.z == -1){
+            else if (cube.z == -1) {
                 magicCube.rotateY(0, 'anti');
             }
         }
@@ -124,11 +134,11 @@ function doRotate(side, cube) {
         else if (cube.z == -1) {
             magicCube.rotateX(cube.x);
         }
-        else{
-            if(cube.x == 1){
+        else {
+            if (cube.x == 1) {
                 magicCube.rotateZ(0);
             }
-            else if(cube.x == -1){
+            else if (cube.x == -1) {
                 magicCube.rotateZ(0, 'anti');
             }
         }
@@ -140,26 +150,96 @@ function doRotate(side, cube) {
         else if (cube.x == -1) {
             magicCube.rotateY(cube.y);
         }
-        else{
-            if(cube.y == 1){
+        else {
+            if (cube.y == 1) {
                 magicCube.rotateX(0);
             }
-            else if(cube.y == -1){
+            else if (cube.y == -1) {
                 magicCube.rotateX(0, 'anti');
             }
         }
     }
     redrawSides();
+    if (running && magicCube.allRestored()) {
+        taskFinished();
+    }
+}
+function randomSteps(steps) {
+    for (var i = 0; i < steps; i++) {
+        var side = Math.floor(Math.random() * 3);
+        var value = Math.floor(Math.random() * 3);
+        var direction;
+        if (Math.floor(Math.random() * 2) == 1) {
+            direction = 'anti';
+        }
+        if (side == 0) {
+            magicCube.rotateX(value - 1, direction);
+        }
+        else if (side == 1) {
+            magicCube.rotateY(value - 1, direction);
+        }
+        else {
+            magicCube.rotateZ(value - 1, direction);
+        }
+
+    }
+    redrawSides();
+}
+function startNewTask() {
+    resetStates();
+    randomSteps(1);
+    ready = true;
+}
+
+function taskStart() {
+    startClock();
+    document.getElementById("grade").innerHTML = "Time spent: " + 0 + " seconds";
+}
+function taskFinished() {
+    stopClock();
+    ready = false;
+    document.getElementById("msg").innerHTML = "Congratulations!"
+    var timeSpent = (endTime - startTime) / 1000;
+    document.getElementById("grade").innerHTML = "Your grade is: " + timeSpent + " seconds";
+}
+function taskCanceled() {
+    stopClock();
+    resetStates();
+}
+function resetStates(){
+    document.getElementById("msg").innerHTML = "Not started yet";
+    document.getElementById("grade").innerHTML = "";
+    ready = false;
+    running = false;
+}
+function startClock() {
+    running = true;
+    startTime = new Date().getTime();
+}
+function stopClock() {
+    running = false;
+    endTime = new Date().getTime();
 }
 </script>
 </head>
 <body onload="show();">
-<div>
-    <label>Reset</label>
-    <input type="button" value="reset" onclick="reset();"/>
+<div style="width:920px">
+    <canvas id="mg" style="height:500px; width:500px;float:left" onMouseMove="showCursor(event)"
+            onClick="moveStep(event)">
+        You browser does not support canvas.
+    </canvas>
+    <div style="width:400px; height:500px;float:right">
+        <div style="margin-bottom:50px;">
+            <input type="button" value="Start playing" onclick="startNewTask();"/>
+            <input type="button" value="Restore" onclick="reset();"/>
+            <br/>
+            <span style="font-style:italic; color:#888888">Will start timer when you first click magic cube! </span>
+        </div>
+        <div>
+            <span id="msg" style="font-size:28px;color:darkGoldenRod;">Not started yet</span> <br/>
+            <span id="grade" style="color:red"></span>
+        </div>
+    </div>
 </div>
-<canvas id="mg" style="height:500px; width:500px" onMouseMove="showCursor(event)" onClick="moveStep(event)">
-    You browser does not support canvas.
-</canvas>
 </body>
 </html>
