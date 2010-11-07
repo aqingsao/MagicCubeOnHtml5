@@ -72,11 +72,13 @@ function showCursor(event) {
     for (var i = 0; i < magicCube.cubes.length; i++) {
         for (var j = 0; j < magicCube.cubes[i].visibleSides.length; j++) {
             var side = magicCube.cubes[i].visibleSides[j];
-            side.draw(cxt, central, singleSide, magicCube.cubes[i]);
             var x = event.clientX - c.offsetLeft;
             var y = event.clientY - c.offsetTop;
-            if (clickable == false) {
-                clickable = cxt.isPointInPath(x, y);
+            side.draw(cxt, central, singleSide, magicCube.cubes[i]);
+            if(cxt.isPointInPath(x, y)){
+                clickable = true;
+                log(x, y);
+                side.draw(cxt, central, singleSide, magicCube.cubes[i], true);
             }
         }
     }
@@ -87,6 +89,7 @@ function showCursor(event) {
         c.style.cursor = "default";
     }
 }
+
 function moveStep(event) {
     c = document.getElementById("mg");
     cxt = c.getContext("2d");
@@ -99,12 +102,12 @@ function moveStep(event) {
             var x = event.clientX - c.offsetLeft;
             var y = event.clientY - c.offsetTop;
             if (cxt.isPointInPath(x, y)) {
-                doRotate(side, magicCube.cubes[i]);
+                doRotate(side, magicCube.cubes[i], event);
             }
         }
     }
 }
-function doRotate(side, cube) {
+function doRotate(side, cube, event) {
     if (ready == true) {
         if (running == false) {
             taskStart();
@@ -160,6 +163,7 @@ function doRotate(side, cube) {
         }
     }
     redrawSides();
+    showCursor(event);
     if (running && magicCube.allRestored()) {
         taskFinished();
     }
@@ -189,6 +193,7 @@ function startNewTask() {
     resetStates();
     randomSteps(1);
     ready = true;
+    document.getElementById("msg").innerHTML = "Will start timer at your first click"
 }
 
 function taskStart() {
@@ -199,7 +204,7 @@ function taskFinished() {
     stopClock();
     ready = false;
     document.getElementById("msg").innerHTML = "Congratulations!"
-    var timeSpent = (endTime - startTime) / 1000;
+    var timeSpent = Math.round((endTime - startTime) / 100)/10;
     document.getElementById("grade").innerHTML = "Your grade is: " + timeSpent + " seconds";
 }
 function taskCanceled() {
@@ -239,6 +244,8 @@ function stopClock() {
             <span id="msg" style="font-size:28px;color:darkGoldenRod;">Not started yet</span> <br/>
             <span id="grade" style="color:red"></span>
         </div>
+    </div>
+    <div id="log">
     </div>
 </div>
 </body>

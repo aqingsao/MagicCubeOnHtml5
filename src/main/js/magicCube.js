@@ -78,7 +78,7 @@ function YSide() {
 }
 function ZSide() {
 }
-XSide.prototype.draw = function(cxt, startPoint, singleSide, cube) {
+XSide.prototype.draw = function(cxt, startPoint, singleSide, cube, withArrow) {
     var point = startPoint;
     if (cube.x < 0) {
         var bgLength = 3 * singleSide + 1.5 * singleSide;
@@ -91,10 +91,45 @@ XSide.prototype.draw = function(cxt, startPoint, singleSide, cube) {
     for (var y = 1; y > cube.y; y--) {
         point = point.angleRelative(singleSide, Math.PI * 3 / 2);
     }
-    var polygon = point.buildPolygon(singleSide, Math.PI / 6, Math.PI * 3 / 2);
+    var polygon = new CPoint(point.x, point.y).buildPolygon(singleSide, Math.PI / 6, Math.PI * 3 / 2);
     polygon.draw(cxt, cube.xColor);
+    if (withArrow == true) {
+        var centralPoint = point.angleRelative(singleSide / 2, -Math.PI / 6);
+        if (cube.y == 1) {
+            drawArrow(cxt, centralPoint, singleSide, Math.PI / 2);
+        }
+        else if (cube.y == -1) {
+            drawArrow(cxt, centralPoint, singleSide, Math.PI * 3 / 2);
+        }
+        else {
+            if (cube.z == 1) {
+                drawArrow(cxt, centralPoint, singleSide, Math.PI + Math.PI/6);
+            }
+            else if (cube.z == -1) {
+                drawArrow(cxt, centralPoint, singleSide, Math.PI/6);
+            }
+        }
+    }
 }
-YSide.prototype.draw = function(cxt, startPoint, singleSide, cube) {
+function drawArrow(cxt, central, singleSide, angle) {
+    cxt.beginPath();
+    var arrowLength = singleSide / 6;
+    var bottom = central.angleRelative(singleSide / 4, angle + Math.PI);
+    var head = central.angleRelative(singleSide / 4, angle);
+    var left = head.angleRelative(arrowLength, Math.PI + angle - Math.PI / 6);
+    var right = head.angleRelative(arrowLength, Math.PI + angle + Math.PI / 6);
+
+    cxt.moveTo(bottom.x, bottom.y);
+    cxt.lineTo(head.x, head.y);
+    cxt.lineTo(left.x, left.y);
+    cxt.lineTo(head.x, head.y);               
+    cxt.lineTo(right.x, right.y);
+
+    cxt.strokeStyle = "#000000";
+    cxt.stroke();
+    cxt.closePath();
+}
+YSide.prototype.draw = function(cxt, startPoint, singleSide, cube, withArrow) {
     var point = startPoint;
     if (cube.y < 0) {
         var bgLength = 3 * singleSide + 1.5 * singleSide;
@@ -107,10 +142,28 @@ YSide.prototype.draw = function(cxt, startPoint, singleSide, cube) {
     for (var z = 1; z > cube.z; z--) {
         point = point.angleRelative(singleSide, Math.PI / 6);
     }
+
     var polygon = point.buildPolygon(singleSide, Math.PI / 6, Math.PI - Math.PI / 6);
     polygon.draw(cxt, cube.yColor);
+    if (withArrow == true) {
+        var centralPoint = point.angleRelative(singleSide / 2, Math.PI / 2);
+        if (cube.z == 1) {
+            drawArrow(cxt, centralPoint, singleSide, Math.PI + Math.PI/6);
+        }
+        else if (cube.z == -1) {
+            drawArrow(cxt, centralPoint, singleSide, Math.PI/6);
+        }
+        else {
+            if (cube.x == 1) {
+                drawArrow(cxt, centralPoint, singleSide, - Math.PI/6);
+            }
+            else if (cube.x == -1) {
+                drawArrow(cxt, centralPoint, singleSide, Math.PI - Math.PI/6);
+            }
+        }
+    }
 }
-ZSide.prototype.draw = function(cxt, startPoint, singleSide, cube) {
+ZSide.prototype.draw = function(cxt, startPoint, singleSide, cube, withArrow) {
     var point = startPoint;
     if (cube.z < 0) {
         var bgLength = 3 * singleSide + 1.5 * singleSide;
@@ -124,6 +177,23 @@ ZSide.prototype.draw = function(cxt, startPoint, singleSide, cube) {
     }
     var polygon = point.buildPolygon(singleSide, Math.PI - Math.PI / 6, Math.PI * 3 / 2);
     polygon.draw(cxt, cube.zColor);
+    if (withArrow == true) {
+        var centralPoint = point.angleRelative(singleSide / 2, Math.PI + Math.PI / 6);
+        if (cube.x == 1) {
+            drawArrow(cxt, centralPoint, singleSide, - Math.PI/6);
+        }
+        else if (cube.x == -1) {
+            drawArrow(cxt, centralPoint, singleSide, Math.PI - Math.PI/6);
+        }
+        else {
+            if (cube.y == 1) {
+                drawArrow(cxt, centralPoint, singleSide, Math.PI/2);
+            }
+            else if (cube.y == -1) {
+                drawArrow(cxt, centralPoint, singleSide, Math.PI * 3/2);
+            }
+        }
+    }
 }
 function MagicCube() {
     this.cubes = [
@@ -186,13 +256,13 @@ MagicCube.prototype.rotate = function(cube1, cube2, cube3, cube4, direction) {
     var tmpX = cube1.xColor;
     var tmpY = cube1.yColor;
     var tmpZ = cube1.zColor;
-    if(direction == 'anti'){
+    if (direction == 'anti') {
         cube1.copyColor(cube4);
         cube4.copyColor(cube3);
         cube3.copyColor(cube2);
         cube2.copyColor2(tmpX, tmpY, tmpZ);
     }
-    else{
+    else {
         cube1.copyColor(cube2);
         cube2.copyColor(cube3);
         cube3.copyColor(cube4);
@@ -228,63 +298,70 @@ MagicCube.prototype.rotateZ = function(value, direction) {
     this.rotate(this.getCube(0, 1, value), this.getCube(-1, 0, value), this.getCube(0, -1, value), this.getCube(1, 0, value), direction);
 }
 
-MagicCube.prototype.allRestored = function(){
-    if(!this.theSameColor(this.getXSideColors(1))){
+MagicCube.prototype.allRestored = function() {
+    if (!this.theSameColor(this.getXSideColors(1))) {
         return false;
     }
-    if(!this.theSameColor(this.getXSideColors(-1))){
+    if (!this.theSameColor(this.getXSideColors(-1))) {
         return false;
     }
-    if(!this.theSameColor(this.getYSideColors(1))){
+    if (!this.theSameColor(this.getYSideColors(1))) {
         return false;
     }
-    if(!this.theSameColor(this.getYSideColors(-1))){
+    if (!this.theSameColor(this.getYSideColors(-1))) {
         return false;
     }
-    if(!this.theSameColor(this.getZSideColors(1))){
+    if (!this.theSameColor(this.getZSideColors(1))) {
         return false;
     }
-    if(!this.theSameColor(this.getZSideColors(-1))){
+    if (!this.theSameColor(this.getZSideColors(-1))) {
         return false;
     }
     return true;
 
 }
 
-MagicCube.prototype.getXSideColors = function(value){
+MagicCube.prototype.getXSideColors = function(value) {
     var sides = [];
     for (var i = 0; i < this.cubes.length; i++) {
-       if(this.cubes[i].x == value){
-           sides[sides.length] = this.cubes[i].xColor;
-       }
+        if (this.cubes[i].x == value) {
+            sides[sides.length] = this.cubes[i].xColor;
+        }
     }
     return sides;
 }
-MagicCube.prototype.getYSideColors = function(value){
+MagicCube.prototype.getYSideColors = function(value) {
     var sides = [];
     for (var i = 0; i < this.cubes.length; i++) {
-       if(this.cubes[i].y == value){
-           sides[sides.length] = this.cubes[i].yColor;
-       }
+        if (this.cubes[i].y == value) {
+            sides[sides.length] = this.cubes[i].yColor;
+        }
     }
     return sides;
 }
-MagicCube.prototype.getZSideColors = function(value){
+MagicCube.prototype.getZSideColors = function(value) {
     var sides = [];
     for (var i = 0; i < this.cubes.length; i++) {
-       if(this.cubes[i].z == value){
-           sides[sides.length] = this.cubes[i].zColor;
-       }
+        if (this.cubes[i].z == value) {
+            sides[sides.length] = this.cubes[i].zColor;
+        }
     }
     return sides;
 }
 
-MagicCube.prototype.theSameColor = function(colors){
+MagicCube.prototype.theSameColor = function(colors) {
     var c = colors[0];
-    for(var i = 0; i < colors.length; i++){
-        if(colors[i] != c){
+    for (var i = 0; i < colors.length; i++) {
+        if (colors[i] != c) {
             return false;
         }
     }
     return true;
+}
+
+function log(point) {
+    log(point.x, point.y);
+}
+function log(x, y) {
+    document.getElementById("log").innerHTML = "x=" + x + ",y=" + y;
 }
