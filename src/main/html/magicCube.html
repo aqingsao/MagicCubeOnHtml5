@@ -2,7 +2,7 @@
         "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
-<title></title>
+<title>Magic Cube</title>
 <script type="text/javascript" src="../js/canvaschart-0.0.1.js">
 </script>
 <script type="text/javascript" src="../js/magicCube.js">
@@ -77,7 +77,6 @@ function showCursor(event) {
             side.draw(cxt, central, singleSide, magicCube.cubes[i]);
             if(cxt.isPointInPath(x, y)){
                 clickable = true;
-                log(x, y);
                 side.draw(cxt, central, singleSide, magicCube.cubes[i], true);
             }
         }
@@ -240,7 +239,9 @@ function stopClock() {
 </head>
 <body onload="show();">
 <div style="width:920px">
-    <canvas id="mg" style="height:500px; width:500px;float:left" onMouseMove="showCursor(event)"
+    <div style="font-size:300%;">Magic Cube On Html5</div>
+    <div style="font-size:100%; color: #888888; font-style:italic; padding-bottom:20px;">A one day work on plain old javascript and Html5</div>
+    <canvas id="mg" style="height:500px; width:500px;float:left;" onMouseMove="showCursor(event)"
             onClick="moveStep(event)">
         You browser does not support canvas.
     </canvas>
