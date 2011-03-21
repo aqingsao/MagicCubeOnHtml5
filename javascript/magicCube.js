@@ -1,18 +1,6 @@
-function pie2(canvas, title, data, height, width) {
-    c = document.getElementById(canvas);
-    c.style.border = "1px solid";
-    c.height = height;
-    c.width = width;
-
-    var cxt = c.getContext("2d");
-}
-
 function CPoint(x, y) {
     this.x = x;
     this.y = y;
-}
-CPoint.prototype.pathRelative = function(deltaX, deltaY){
-    return new CPoint(this.x + deltaX, this.y + deltaY);
 }
 CPoint.prototype.angleRelative = function(length, angle){
     return new CPoint(this.x + Math.cos(angle) * length, this.y - Math.sin(angle) * length);
@@ -22,17 +10,6 @@ CPoint.prototype.buildPolygon = function(sideLength, xAngle, yAngle){
     var p3 = p2.angleRelative(sideLength, yAngle);
     var p4 = this.angleRelative(sideLength, yAngle);
     return new CPolygon(this, p2, p3, p4);
-}
-
-function CRect(start, width, height) {
-    this.start = start;
-    this.width = width;
-    this.height = height;
-}
-
-function CCircle(central, radius) {
-    this.central = central;
-    this.radius = radius;
 }
 
 function CPolygon() {
@@ -65,6 +42,9 @@ function Cube(x, y, z) {
     this.visibleSides = [];
     this.invisibleSides = [];
 
+	this.xColor = null;
+	this.yColor = null;
+	this.zColor = null;
     if (x == 1) {
         this.xColor = xColor;
         this.visibleSides[this.visibleSides.length] = new XSide();
@@ -72,9 +52,6 @@ function Cube(x, y, z) {
     else if (x == -1) {
         this.xColor = mxColor;
         this.invisibleSides[this.invisibleSides.length] = new XSide();
-    }
-    else {
-        this.xColor = null;
     }
     if (y == 1) {
         this.yColor = yColor;
@@ -84,9 +61,6 @@ function Cube(x, y, z) {
         this.yColor = myColor;
         this.invisibleSides[this.invisibleSides.length] = new YSide();
     }
-    else {
-        this.yColor = null;
-    }
     if (z == 1) {
         this.zColor = zColor;
         this.visibleSides[this.visibleSides.length] = new ZSide();
@@ -94,9 +68,6 @@ function Cube(x, y, z) {
     else if (z == -1) {
         this.zColor = mzColor;
         this.invisibleSides[this.invisibleSides.length] = new ZSide();
-    }
-    else {
-        this.zColor = null;
     }
 }
 
@@ -249,35 +220,14 @@ ZSide.prototype.draw = function(cxt, startPoint, singleSide, cube, withArrow) {
     }
 }
 function MagicCube() {
-    this.cubes = [
-        new Cube(-1, 1, 1),
-        new Cube(0, 1, 1),
-        new Cube(1, 1, 1),
-        new Cube(-1, 1, 0),
-        new Cube(0, 1, 0),
-        new Cube(1, 1, 0),
-        new Cube(-1, 1, -1),
-        new Cube(0, 1, -1),
-        new Cube(1, 1, -1),
-        new Cube(-1, 0, 1),
-        new Cube(0, 0, 1),
-        new Cube(1, 0, 1),
-        new Cube(-1, 0, 0),
-        new Cube(0, 0, 0),
-        new Cube(1, 0, 0),
-        new Cube(-1, 0, -1),
-        new Cube(0, 0, -1),
-        new Cube(1, 0, -1),
-        new Cube(-1, -1, 1),
-        new Cube(0, -1, 1),
-        new Cube(1, -1, 1),
-        new Cube(-1, -1, 0),
-        new Cube(0, -1, 0),
-        new Cube(1, -1, 0),
-        new Cube(-1, -1, -1),
-        new Cube(0, -1, -1),
-        new Cube(1, -1, -1)
-    ];
+    this.cubes = new Array();
+	for(var x = -1; x <= 1; x++){
+		for(var y = -1; y <= 1; y++){
+			for(var z = -1; z <= 1; z++){
+				this.cubes.push(new Cube(x, y, z));
+			}
+		}
+	};
 }
 
 MagicCube.prototype.drawSides = function(cxt, central, singleSide) {
@@ -290,7 +240,6 @@ MagicCube.prototype.drawSides = function(cxt, central, singleSide) {
     for (var i = 0; i < this.cubes.length; i++) {
         for (var j = 0; j < this.cubes[i].visibleSides.length; j++) {
             var side = this.cubes[i].visibleSides[j];
-            ;
             side.draw(cxt, central, singleSide, this.cubes[i]);
         }
     }
@@ -412,9 +361,212 @@ MagicCube.prototype.theSameColor = function(colors) {
     return true;
 }
 
-function log(point) {
-    log(point.x, point.y);
+var startTime = null;
+var endTime = null;
+var ready = false;
+var running = false;
+function drawSideBackground(central, singleSide, cxt, color) {
+    var bgLength = 3 * singleSide + 1.5 * singleSide;
+
+    var leftBG = central.buildPolygon(bgLength, Math.PI / 2, Math.PI + Math.PI / 6);
+    var downBG = central.buildPolygon(bgLength, -Math.PI / 6, Math.PI / 2);
+    var rightBG = central.buildPolygon(bgLength, Math.PI + Math.PI / 6, -Math.PI / 6);
+
+    cxt.fillStyle = color;
+    leftBG.draw(cxt);
+    downBG.draw(cxt);
+    rightBG.draw(cxt);
 }
-function log(x, y) {
-    document.getElementById("log").innerHTML = "x=" + x + ",y=" + y;
+
+function redrawSides() {
+    var c = document.getElementById("mg");
+    var cxt = c.getContext("2d");
+    var singleSide = 40;
+    var central = new CPoint(c.width / 2, c.height / 2);
+
+    magicCube.drawSides(cxt, central, singleSide);
+}
+
+function reset() {
+    magicCube = new MagicCube();
+    redrawSides();
+    taskCanceled();
+}
+function clickEvent() {
+    c.cursor.style = "pointer";
+}
+function showCursor(event) {
+    c = document.getElementById("mg");
+    cxt = c.getContext("2d");
+    var singleSide = 40;
+    var central = new CPoint(c.width / 2, c.height / 2);
+    var clickable = false;
+	if(typeof(magicCube) == "undefined"){
+		return;
+	}
+    for (var i = 0; i < magicCube.cubes.length; i++) {
+        for (var j = 0; j < magicCube.cubes[i].visibleSides.length; j++) {
+            var side = magicCube.cubes[i].visibleSides[j];
+            var x = event.clientX - c.offsetLeft + window.scrollX;
+            var y = event.clientY - c.offsetTop + window.scrollY;
+            side.draw(cxt, central, singleSide, magicCube.cubes[i]);
+            if(cxt.isPointInPath(x, y)){
+                clickable = true;
+                side.draw(cxt, central, singleSide, magicCube.cubes[i], true);
+            }
+        }
+    }
+    if (clickable) {
+        c.style.cursor = "pointer";
+    }
+    else {
+        c.style.cursor = "default";
+    }
+}
+
+function moveStep(event) {
+    c = document.getElementById("mg");
+    cxt = c.getContext("2d");
+    var central = new CPoint(c.width / 2, c.height / 2);
+    var singleSide = 40;
+    for (var i = 0; i < magicCube.cubes.length; i++) {
+        for (var j = 0; j < magicCube.cubes[i].visibleSides.length; j++) {
+            var side = magicCube.cubes[i].visibleSides[j];
+            side.draw(cxt, central, singleSide, magicCube.cubes[i]);
+            var x = event.clientX - c.offsetLeft + window.scrollX;
+            var y = event.clientY - c.offsetTop + window.scrollY;
+            if (cxt.isPointInPath(x, y)) {
+                doRotate(side, magicCube.cubes[i], event);
+            }
+        }
+    }
+}
+function doRotate(side, cube, event) {
+    if (ready == true) {
+        if (running == false) {
+            taskStart();
+        }
+    }
+
+    if (side instanceof XSide) {
+        if (cube.y == 1) {
+            magicCube.rotateZ(cube.z, 'anti');
+        }
+        else if (cube.y == -1) {
+            magicCube.rotateZ(cube.z);
+        }
+        else {
+            if (cube.z == 1) {
+                magicCube.rotateY(0);
+            }
+            else if (cube.z == -1) {
+                magicCube.rotateY(0, 'anti');
+            }
+        }
+    }
+    else if (side instanceof YSide) {
+        if (cube.z == 1) {
+            magicCube.rotateX(cube.x, 'anti');
+        }
+        else if (cube.z == -1) {
+            magicCube.rotateX(cube.x);
+        }
+        else {
+            if (cube.x == 1) {
+                magicCube.rotateZ(0);
+            }
+            else if (cube.x == -1) {
+                magicCube.rotateZ(0, 'anti');
+            }
+        }
+    }
+    else if (side instanceof ZSide) {
+        if (cube.x == 1) {
+            magicCube.rotateY(cube.y, 'anti');
+        }
+        else if (cube.x == -1) {
+            magicCube.rotateY(cube.y);
+        }
+        else {
+            if (cube.y == 1) {
+                magicCube.rotateX(0);
+            }
+            else if (cube.y == -1) {
+                magicCube.rotateX(0, 'anti');
+            }
+        }
+    }
+    redrawSides();
+    showCursor(event);
+    if (running && magicCube.allRestored()) {
+        taskFinished();
+    }
+}
+function randomSteps(steps) {
+    for (var i = 0; i < steps; i++) {
+        var side = Math.floor(Math.random() * 3);
+        var value = Math.floor(Math.random() * 3);
+        var direction;
+        if (Math.floor(Math.random() * 2) == 1) {
+            direction = 'anti';
+        }
+        if (side == 0) {
+            magicCube.rotateX(value - 1, direction);
+        }
+        else if (side == 1) {
+            magicCube.rotateY(value - 1, direction);
+        }
+        else {
+            magicCube.rotateZ(value - 1, direction);
+        }
+
+    }
+    redrawSides();
+}
+function startNewTask() {
+    reset();
+    var steps = document.getElementById("steps").value;
+    if(isNaN(steps)){
+        steps = 1;
+    }
+    if(steps < 1){
+        steps = 1;
+    }
+    else if(steps > 50){
+        steps = 50;
+    }
+    randomSteps(steps);
+    ready = true;
+    document.getElementById("msg").innerHTML = "Will start timer at your first click"
+}
+
+function taskStart() {
+    startClock();
+    document.getElementById("msg").innerHTML = "Timer started...";
+    document.getElementById("grade").innerHTML = "";
+}
+function taskFinished() {
+    stopClock();
+    ready = false;
+    document.getElementById("msg").innerHTML = "Congratulations!"
+    var timeSpent = Math.round((endTime - startTime) / 100)/10;
+    document.getElementById("grade").innerHTML = "Your grade is: " + timeSpent + " seconds";
+}
+function taskCanceled() {
+    stopClock();
+    resetStates();
+}
+function resetStates(){
+    document.getElementById("msg").innerHTML = "Not started yet";
+    document.getElementById("grade").innerHTML = "";
+    ready = false;
+    running = false;
+}
+function startClock() {
+    running = true;
+    startTime = new Date().getTime();
+}
+function stopClock() {
+    running = false;
+    endTime = new Date().getTime();
 }
